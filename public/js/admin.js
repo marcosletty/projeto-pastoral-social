@@ -208,9 +208,23 @@ async function adicionarProduto() {
 
 async function excluirProduto(id) {
     if(confirm('Tem certeza que deseja apagar permanentemente este alimento do sistema?')) {
-        await fetch(`/api/admin/item/${id}`, { method: 'DELETE' });
-        mostrarAviso("Alimento apagado!");
-        carregarAdmin();
+        try {
+            // Aguarda a resposta do servidor
+            const resposta = await fetch(`/api/admin/item/${id}`, { method: 'DELETE' });
+            
+            // Só exibe sucesso se o servidor retornar um status de OK (ex: 200)
+            if (resposta.ok) {
+                mostrarAviso("Alimento apagado!");
+                carregarAdmin(); // Recarrega a tabela de itens
+            } else {
+                // Caso a rota retorne um erro (como o 404 que configuramos)
+                alert("Falha ao excluir. O alimento pode já ter sido apagado ou não existe.");
+            }
+        } catch (erro) {
+            // Captura falhas de rede (ex: servidor caiu, usuário sem internet)
+            console.error("Erro na requisição:", erro);
+            alert("Erro de conexão com o servidor ao tentar excluir o alimento.");
+        }
     }
 }
 

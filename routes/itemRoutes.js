@@ -90,4 +90,19 @@ router.put('/zerar-estoque', async (req, res) => {
     }
 });
 
+// 7. Excluir um Produto Específico
+router.delete('/admin/item/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    // Busca o item no MongoDB pelo seu id_item e o deleta
+    const itemDeletado = await Item.findOneAndDelete({ id_item: id });
+    
+    if (!itemDeletado) {
+        // Retorna erro 404 se o item não for encontrado no banco
+        return res.status(404).json({ sucesso: false, erro: "Alimento não encontrado." });
+    }
+    
+    res.json({ sucesso: true, mensagem: "Alimento apagado permanentemente." });
+}));
+
 module.exports = router;
