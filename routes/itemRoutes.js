@@ -78,4 +78,16 @@ router.post('/config', asyncHandler(async (req, res) => {
     res.json({ sucesso: true });
 }));
 
+// Rota de Risco: Zerar Estoque e Intenções
+router.put('/zerar-estoque', async (req, res) => {
+    try {
+        // Comando updateMany: localiza todos os itens {} e seta as contagens para 0
+        await Item.updateMany({}, { $set: { quantidade: 0, intencoes: 0 } });
+        res.status(200).json({ mensagem: 'Estoque totalmente zerado para um novo ciclo.' });
+    } catch (erro) {
+        console.error('Erro ao zerar estoque:', erro);
+        res.status(500).json({ erro: 'Erro interno ao tentar zerar o estoque.' });
+    }
+});
+
 module.exports = router;

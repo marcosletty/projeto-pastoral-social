@@ -1,3 +1,13 @@
+// Trava o calendário para não aceitar datas no passado
+document.addEventListener('DOMContentLoaded', () => {
+    const inputData = document.getElementById('data-entrega');
+    if (inputData) {
+        // Pega a data de hoje e formata para o padrão do HTML (AAAA-MM-DD)
+        const dataHoje = new Date().toISOString().split('T')[0];
+        inputData.setAttribute('min', dataHoje);
+    }
+});
+
 function mudarAba(abaId) {
     document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativa'));
     document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativa'));
@@ -223,6 +233,30 @@ async function movimentar(id, operacao) {
     });
     mostrarAviso("Estoque atualizado!");
     carregarAdmin();
+}
+
+// Função para zerar o estoque com trava de segurança
+async function zerarEstoque() {
+    const confirmacao = prompt('ATENÇÃO: Isso vai zerar o estoque e as intenções de doação de TODOS os itens.\\n\\nPara confirmar, digite a palavra CONFIRMAR (tudo em maiúsculo):');
+
+    if (confirmacao === 'CONFIRMAR') {
+        try {
+            // Chama a rota no backend para fazer a limpeza
+            const resposta = await fetch('/api/zerar-estoque', { method: 'PUT' });
+            
+            if (resposta.ok) {
+                alert('Sucesso! O estoque foi zerado para um novo ciclo.');
+                window.location.reload(); // Recarrega a página para mostrar os itens zerados
+            } else {
+                alert('Ocorreu um erro ao tentar zerar o estoque.');
+            }
+        } catch (erro) {
+            console.error('Erro de conexão:', erro);
+            alert('Erro de conexão com o servidor.');
+        }
+    } else if (confirmacao !== null) {
+        alert('Palavra incorreta. Ação cancelada por segurança.');
+    }
 }
 
 // Inicializa a página
