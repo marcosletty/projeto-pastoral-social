@@ -1,0 +1,58 @@
+* { box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; color: #2c3e50; margin: 0; }
+.container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-top: 6px solid #00509e; }
+h2 { color: #00509e; margin-top: 0; font-size: 1.8em; }
+
+.abas { display: flex; gap: 10px; border-bottom: 2px solid #e1e8ed; margin-bottom: 25px; }
+.aba-btn { background: none; border: none; padding: 12px 20px; font-size: 1.1em; color: #7f8c8d; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.aba-btn.ativa { color: #00509e; border-bottom: 3px solid #00509e; }
+.conteudo-aba { display: none; }
+.conteudo-aba.ativa { display: block; }
+
+.formulario-amigavel { background: #f8fafc; padding: 25px; border-radius: 10px; border: 1px solid #e1e8ed; }
+.campo-grupo { margin-bottom: 20px; display: flex; flex-direction: column; }
+.campo-grupo label { font-size: 1.1em; font-weight: bold; margin-bottom: 5px; }
+.campo-grupo input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1.1em; width: 100%; }
+.btn-grande { background: #00509e; color: white; border: none; padding: 15px; font-size: 1.1em; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+
+.card-item { border: 1px solid #e1e8ed; border-radius: 10px; padding: 20px; margin-bottom: 20px; background: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.item-nome { font-size: 1.4em; color: #2c3e50; display: flex; align-items: center; gap: 10px; font-weight: bold; }
+
+.btn-icon-excluir { background: transparent; color: #bdc3c7; border: none; font-size: 1.4em; cursor: pointer; transition: 0.2s; padding: 5px; border-radius: 5px; }
+.btn-icon-excluir:hover { color: #e74c3c; background: #ffebee; }
+
+.bloco-acao-compacto { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e1e8ed; margin-bottom: 15px; }
+.titulo-acao-pequeno { font-size: 0.85em; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 0.5px; }
+
+.btn-salvar { background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-salvar:hover { background: #2196f3; }
+.btn-saida { background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: 0.2s; }
+.btn-saida:hover { background: #c0392b; }
+.btn-entrada { background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: 0.2s; }
+.btn-entrada:hover { background: #2980b9; }
+
+.cobertura-ok { background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; font-size: 0.95em; border: 1px dashed #4caf50; }
+.cobertura-falta { background: #fff3e0; color: #e65100; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; font-size: 0.95em; border: 1px dashed #ff9800; }
+
+#toast { display: none; background: #27ae60; color: white; padding: 15px; text-align: center; border-radius: 8px; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-weight: bold; z-index: 1000; width: 80%; max-width: 400px; }
+
+.painel-dashboard { padding: 20px; background: #fff; border: 1px solid #e1e8ed; border-radius: 10px; }
+.card-alerta { background: #fff3e0; color: #e65100; padding: 15px; border-radius: 8px; font-weight: bold; border-left: 5px solid #ff9800; margin-bottom: 15px; font-size: 1.1em; }
+.card-sucesso { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 8px; font-weight: bold; border-left: 5px solid #4caf50; margin-bottom: 15px; font-size: 1.1em; }
+.card-info { background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 8px; font-weight: bold; border-left: 5px solid #2196f3; margin-bottom: 25px; font-size: 1.1em; }
+.barra-fundo { background: #e1e8ed; border-radius: 10px; height: 22px; width: 100%; display: flex; overflow: hidden; margin-top: 5px; }
+.barra-estoque { background: #2ecc71; height: 100%; transition: width 0.5s; }
+.barra-promessa { background: #3498db; height: 100%; transition: width 0.5s; opacity: 0.8; }
+.bloco-data { display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e1e8ed; }
+
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .container { padding: 15px; }
+    h2 { font-size: 1.5em; text-align: center; }
+    .abas { flex-direction: column; gap: 5px; border-bottom: none; }
+    .aba-btn { text-align: left; background: #f1f5f8; border-radius: 8px; border-bottom: none; }
+    .aba-btn.ativa { border-left: 5px solid #00509e; background: #e1e8ed; }
+    .item-nome { font-size: 1.2em; flex-wrap: wrap; }
+    .bloco-data { flex-direction: column; align-items: stretch; }
+}

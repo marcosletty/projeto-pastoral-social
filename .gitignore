@@ -1,0 +1,5 @@
+# Dependências do Node
+node_modules/
+
+# Configurações locais e Senhas
+.env

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastoral Social - Gestão Fácil</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <h2>📋 Gestão da Paróquia</h2>
+        
+        <div class="abas">
+            <button class="aba-btn ativa" onclick="mudarAba('estoque')">📦 Meu Estoque</button>
+            <button class="aba-btn" onclick="mudarAba('graficos')">📊 Resumo & Previsão</button>
+            <button class="aba-btn" onclick="mudarAba('cadastro')">➕ Novo Alimento</button>
+        </div>
+
+        <div id="toast">✅ Salvo com sucesso!</div>
+
+        <div id="aba-estoque" class="conteudo-aba ativa">
+            <div id="lista-admin">Carregando dados com segurança...</div>
+        </div>
+
+        <div id="aba-graficos" class="conteudo-aba">
+            <div class="painel-dashboard">
+                <div class="bloco-data">
+                    <strong>📅 Data de Entrega das Cestas:</strong>
+                    <input type="date" id="data-entrega" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <button class="btn-salvar" onclick="salvarDataEntrega()" style="padding: 8px 15px; height: auto;">Salvar Data</button>
+                </div>
+                <div id="dashboard-conteudo"></div>
+            </div>
+        </div>
+
+        <div id="aba-cadastro" class="conteudo-aba">
+            <div class="formulario-amigavel">
+                <div class="campo-grupo">
+                    <label>Nome do Alimento</label>
+                    <input type="text" id="novo-nome" placeholder="Ex: Leite em Pó">
+                </div>
+                <div class="campo-grupo">
+                    <label>Ícone (Emoji)</label>
+                    <input type="text" id="novo-icone" placeholder="🥛">
+                </div>
+                <div class="campo-grupo">
+                    <label>Meta Mensal</label>
+                    <input type="number" id="novo-meta" value="50">
+                </div>
+                <button class="btn-grande" onclick="adicionarProduto()">Cadastrar Alimento</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
