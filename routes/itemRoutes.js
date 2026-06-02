@@ -90,6 +90,18 @@ router.put('/zerar-estoque', async (req, res) => {
     }
 });
 
+// Rota para Zerar APENAS as Intenções de Doação
+router.put('/zerar-intencoes', async (req, res) => {
+    try {
+        // Comando updateMany: localiza todos os itens {} e seta apenas as intenções para 0
+        await Item.updateMany({}, { $set: { intencoes: 0 } });
+        res.status(200).json({ mensagem: 'Intenções de doação zeradas com sucesso.' });
+    } catch (erro) {
+        console.error('Erro ao zerar intenções:', erro);
+        res.status(500).json({ erro: 'Erro interno ao tentar zerar as intenções.' });
+    }
+});
+
 // 7. Excluir um Produto Específico
 router.delete('/admin/item/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;

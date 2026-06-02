@@ -251,7 +251,7 @@ async function movimentar(id, operacao) {
 
 // Função para zerar o estoque com trava de segurança
 async function zerarEstoque() {
-    const confirmacao = prompt('ATENÇÃO: Isso vai zerar o estoque e as intenções de doação de TODOS os itens.\\n\\nPara confirmar, digite a palavra CONFIRMAR (tudo em maiúsculo):');
+    const confirmacao = prompt('ATENÇÃO: Isso vai zerar o estoque e as intenções de doação de TODOS os itens.\n\nPara confirmar, digite a palavra CONFIRMAR (tudo em maiúsculo):');
 
     if (confirmacao === 'CONFIRMAR') {
         try {
@@ -263,6 +263,30 @@ async function zerarEstoque() {
                 window.location.reload(); // Recarrega a página para mostrar os itens zerados
             } else {
                 alert('Ocorreu um erro ao tentar zerar o estoque.');
+            }
+        } catch (erro) {
+            console.error('Erro de conexão:', erro);
+            alert('Erro de conexão com o servidor.');
+        }
+    } else if (confirmacao !== null) {
+        alert('Palavra incorreta. Ação cancelada por segurança.');
+    }
+}
+
+// Função para zerar APENAS as intenções de doação
+async function zerarIntencoes() {
+    const confirmacao = prompt('ATENÇÃO: Isso vai zerar APENAS as intenções de doação (promessas feitas pelo site) de TODOS os itens.\n\nPara confirmar, digite a palavra LIMPAR (tudo em maiúsculo):');
+
+    if (confirmacao === 'LIMPAR') {
+        try {
+            // Chama a nova rota no backend para limpar as intenções
+            const resposta = await fetch('/api/zerar-intencoes', { method: 'PUT' });
+            
+            if (resposta.ok) {
+                alert('Sucesso! As intenções de doação foram zeradas.');
+                window.location.reload(); // Recarrega a página para atualizar os números
+            } else {
+                alert('Ocorreu um erro ao tentar zerar as intenções.');
             }
         } catch (erro) {
             console.error('Erro de conexão:', erro);
