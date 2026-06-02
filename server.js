@@ -9,7 +9,7 @@ const porta = process.env.PORT || 3000;
 
 // Configurações base
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Define a rota principal:
 app.get('/', (req, res) => {
