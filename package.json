@@ -2,8 +2,9 @@
   "name": "projeto-pastoral-social",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,6 +14,9 @@
   "dependencies": {
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^7.2.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^8.0.0",
     "mongoose": "^9.2.4"
   }
 }

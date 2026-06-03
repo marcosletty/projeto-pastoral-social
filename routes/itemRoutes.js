@@ -1,120 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const Item = require('../models/Item.js');
-const Config = require('../models/Config.js'); 
+const { body, param } = require('express-validator');
+const itemController = require('../controllers/itemController.js');
 const asyncHandler = require('../utils/asyncHandler.js');
+const authMiddleware = require('../middlewares/auth.js');
 
-// 1. Ler Estoque
-router.get('/estoque', asyncHandler(async (req, res) => {
-    const itens = await Item.find();
-    res.json(itens);
-}));
+// ----------------------------------------------------
+// ROTAS PÚBLICAS
+// ----------------------------------------------------
+router.get('/estoque', asyncHandler(itemController.listarEstoque));
+router.get('/config/:chave', asyncHandler(itemController.obterConfig));
 
-// 2. Criar Novo Produto
-router.post('/admin/item', asyncHandler(async (req, res) => {
-    const { nome, meta, icone } = req.body;
-    if (!nome || isNaN(meta)) {
-        const erro = new Error("Dados incompletos.");
-        erro.status = 400;
-        throw erro;
-    }
-    
-    let idAutomacao = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-    const novoItem = new Item({ id_item: idAutomacao, nome, meta: Number(meta), icone: icone || "📦" });
-    await novoItem.save();
-    res.json({ sucesso: true });
-}));
+router.post('/publico/intencao', [
+    body('id').notEmpty().withMessage('O ID do item é obrigatório.').trim().escape()
+], asyncHandler(itemController.registrarIntencao));
 
-// 3. Atualizar (Balanço ou Meta)
-router.put('/admin/atualizar', asyncHandler(async (req, res) => {
-    const { id, quantidade, meta } = req.body;
-    const item = await Item.findOneAndUpdate(
-        { id_item: id }, 
-        { quantidade: Number(quantidade), meta: Number(meta) },
-        { new: true }
-    );
-    if (!item) throw new Error("Item não encontrado.");
-    res.json({ sucesso: true });
-}));
+// ----------------------------------------------------
+// ROTAS PRIVADAS
+// ----------------------------------------------------
+router.post('/admin/item', authMiddleware, [
+    body('nome').notEmpty().withMessage('O nome é obrigatório.').trim().escape(),
+    body('meta').isInt({ gt: 0 }).withMessage('A meta deve ser um número maior que zero.'),
+    body('icone').optional().trim()
+], asyncHandler(itemController.criarItem));
 
-// 4. Movimentação (+ ou -)
-router.post('/admin/movimentar', asyncHandler(async (req, res) => {
-    const { id, valor, operacao } = req.body;
-    const valorNum = Number(valor);
-    if (isNaN(valorNum) || valorNum <= 0) throw new Error("Valor inválido.");
+router.put('/admin/atualizar', authMiddleware, [
+    body('id').notEmpty().trim().escape(),
+    body('quantidade').isInt({ min: 0 }).withMessage('A quantidade não pode ser negativa.'),
+    body('meta').isInt({ gt: 0 }).withMessage('A meta deve ser maior que zero.')
+], asyncHandler(itemController.atualizarItem));
 
-    let item = await Item.findOne({ id_item: id });
-    if (!item) throw new Error("Item inexistente.");
+router.post('/admin/movimentar', authMiddleware, [
+    body('id').notEmpty().trim().escape(),
+    body('valor').isInt({ gt: 0 }).withMessage('O valor de movimentação deve ser maior que zero.'),
+    body('operacao').isIn(['entrada', 'saida']).withMessage('Operação inválida.')
+], asyncHandler(itemController.movimentarEstoque));
 
-    if (operacao === 'entrada') item.quantidade += valorNum;
-    else if (operacao === 'saida') {
-        if (item.quantidade - valorNum < 0) {
-            const erro = new Error(`Estoque insuficiente! Você só tem ${item.quantidade}.`);
-            erro.status = 400;
-            throw erro;
-        }
-        item.quantidade -= valorNum;
-    }
-    await item.save();
-    res.json({ sucesso: true });
-}));
+router.post('/config', authMiddleware, [
+    body('chave').notEmpty().trim().escape(),
+    body('valor').notEmpty().trim().escape()
+], asyncHandler(itemController.salvarConfig));
 
-// 5. Intenção de Doação
-router.post('/publico/intencao', asyncHandler(async (req, res) => {
-    const { id } = req.body;
-    await Item.findOneAndUpdate({ id_item: id }, { $inc: { intencoes: 1 } });
-    res.json({ sucesso: true });
-}));
+router.put('/zerar-estoque', authMiddleware, asyncHandler(itemController.zerarEstoque));
+router.put('/zerar-intencoes', authMiddleware, asyncHandler(itemController.zerarIntencoes));
 
-// 6. Configurações Globais
-router.get('/config/:chave', asyncHandler(async (req, res) => {
-    const config = await Config.findOne({ chave: req.params.chave });
-    res.json({ valor: config ? config.valor : null });
-}));
-
-router.post('/config', asyncHandler(async (req, res) => {
-    const { chave, valor } = req.body;
-    await Config.findOneAndUpdate({ chave }, { valor }, { upsert: true });
-    res.json({ sucesso: true });
-}));
-
-// Rota de Risco: Zerar Estoque e Intenções
-router.put('/zerar-estoque', async (req, res) => {
-    try {
-        // Comando updateMany: localiza todos os itens {} e seta as contagens para 0
-        await Item.updateMany({}, { $set: { quantidade: 0, intencoes: 0 } });
-        res.status(200).json({ mensagem: 'Estoque totalmente zerado para um novo ciclo.' });
-    } catch (erro) {
-        console.error('Erro ao zerar estoque:', erro);
-        res.status(500).json({ erro: 'Erro interno ao tentar zerar o estoque.' });
-    }
-});
-
-// Rota para Zerar APENAS as Intenções de Doação
-router.put('/zerar-intencoes', async (req, res) => {
-    try {
-        // Comando updateMany: localiza todos os itens {} e seta apenas as intenções para 0
-        await Item.updateMany({}, { $set: { intencoes: 0 } });
-        res.status(200).json({ mensagem: 'Intenções de doação zeradas com sucesso.' });
-    } catch (erro) {
-        console.error('Erro ao zerar intenções:', erro);
-        res.status(500).json({ erro: 'Erro interno ao tentar zerar as intenções.' });
-    }
-});
-
-// 7. Excluir um Produto Específico
-router.delete('/admin/item/:id', asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    
-    // Busca o item no MongoDB pelo seu id_item e o deleta
-    const itemDeletado = await Item.findOneAndDelete({ id_item: id });
-    
-    if (!itemDeletado) {
-        // Retorna erro 404 se o item não for encontrado no banco
-        return res.status(404).json({ sucesso: false, erro: "Alimento não encontrado." });
-    }
-    
-    res.json({ sucesso: true, mensagem: "Alimento apagado permanentemente." });
-}));
+router.delete('/admin/item/:id', authMiddleware, [
+    param('id').notEmpty().trim().escape()
+], asyncHandler(itemController.excluirItem));
 
 module.exports = router;

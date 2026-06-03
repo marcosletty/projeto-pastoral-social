@@ -1,45 +1,134 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pastoral Social</title>
     <style>
         /* CSS Responsivo */
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 15px; margin: 0; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 5px solid #00509e; }
-        .cabecalho { text-align: center; margin-bottom: 20px; }
-        h1 { color: #00509e; font-size: 1.8em; margin: 10px 0; }
-        p.subtitulo { color: #666; font-size: 0.95em; margin-top: -5px; }
-        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f6;
+            padding: 15px;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-top: 5px solid #00509e;
+        }
+
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #00509e;
+            font-size: 1.8em;
+            margin: 10px 0;
+        }
+
+        p.subtitulo {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: -5px;
+        }
+
         /* Banner da Data de Entrega */
-        .banner-entrega { 
-            display: none; /* Começa escondido, aparece se houver data no banco */
-            background: #e3f2fd; 
-            color: #1565c0; 
-            padding: 12px; 
-            border-radius: 8px; 
-            text-align: center; 
-            font-weight: bold; 
-            margin-bottom: 25px; 
+        .banner-entrega {
+            display: none;
+            /* Começa escondido, aparece se houver data no banco */
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 25px;
             border: 1px solid #bbdefb;
             font-size: 1em;
         }
 
-        .grid-necessidades { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .card-item { border: 1px solid #eee; border-radius: 10px; padding: 20px; text-align: center; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .icone-grande { font-size: 3em; margin-bottom: 10px; }
-        .nome-item { font-size: 1.3em; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-        
-        .status-meta { font-weight: bold; font-size: 1em; margin-bottom: 15px; display: block; padding: 10px; border-radius: 8px; }
-        .status-pendente { color: #c62828; background: #ffebee; border: 1px solid #ffcdd2; }
-        .status-atingida { color: #2e7d32; background: #e8f5e9; border: 1px solid #c8e6c9; }
-        
-        .btn-doar { background: #00509e; color: white; border: none; padding: 15px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 1.05em; }
-        .btn-doar:hover { background: #003d7a; }
+        .grid-necessidades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .card-item {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .icone-grande {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .nome-item {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .status-meta {
+            font-weight: bold;
+            font-size: 1em;
+            margin-bottom: 15px;
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .status-pendente {
+            color: #c62828;
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+        }
+
+        .status-atingida {
+            color: #2e7d32;
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+        }
+
+        .btn-doar {
+            background: #00509e;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            font-size: 1.05em;
+        }
+
+        .btn-doar:hover {
+            background: #003d7a;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="cabecalho">
@@ -50,42 +139,67 @@
         <div id="banner-data" class="banner-entrega">
             📅 Próxima data de entrega das cestas: <span id="data-valor">--/--/----</span>
         </div>
-        
-        <h3 style="color: #00509e; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">Necessidades Atuais</h3>
-        
+
+        <h3 style="color: #00509e; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            Necessidades Atuais</h3>
+
         <div class="grid-necessidades" id="lista-publica">
             <p style="text-align: center;">Carregando doações...</p>
         </div>
     </div>
 
     <script>
-        async function registrarDoacao(idItem, nomeItem) {
+        async function registrarDoacao(idItem, nomeItem, elementoBotao) {
+            elementoBotao.disabled = true;
+            elementoBotao.innerText = '⏳ Processando...';
+            elementoBotao.style.backgroundColor = '#7f8c8d';
+            elementoBotao.style.cursor = 'not-allowed';
+
             try {
-                await fetch('/api/publico/intencao', {
+                const resposta = await fetch('/api/publico/intencao', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: idItem })
                 });
-                alert(`Que Deus abençoe sua generosidade ao doar ${nomeItem}! Por favor, entregue este item na secretaria da paróquia.`);
+
+                if (resposta.ok) {
+                    elementoBotao.innerText = '✅ Doação Registrada';
+                    elementoBotao.style.backgroundColor = '#27ae60';
+                    Swal.fire({
+                        title: 'Muito Obrigado!',
+                        text: `Que Deus abençoe sua generosidade ao doar ${nomeItem}. Por favor, entregue na secretaria.`,
+                        icon: 'success',
+                        confirmButtonColor: '#00509e'
+                    });
+                } else {
+                    throw new Error("Falha no servidor.");
+                }
             } catch (erro) {
-                console.error("Erro ao registrar intenção");
+                elementoBotao.disabled = false;
+                elementoBotao.innerText = '❌ Tentar novamente';
+                elementoBotao.style.backgroundColor = '#e74c3c';
+                elementoBotao.style.cursor = 'pointer';
+                Swal.fire({
+                    title: 'Ops!',
+                    text: 'Tivemos um problema de conexão. Tente novamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#e74c3c'
+                });
             }
         }
 
         async function carregarEstoqueEData() {
             try {
-                // 1. Busca os itens
                 const resEstoque = await fetch('/api/estoque');
                 const dados = await resEstoque.json();
-                
-                // 2. Busca a data de entrega no banco
+
                 const resConfig = await fetch('/api/config/data_entrega');
                 const config = await resConfig.json();
 
-                // Exibe a data se ela existir
                 if (config.valor) {
-                    const dataObjeto = new Date(config.valor + 'T00:00:00');
-                    const dataFormatada = dataObjeto.toLocaleDateString('pt-BR');
+                    const partesData = config.valor.split('-');
+                    const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+
                     document.getElementById('data-valor').innerText = dataFormatada;
                     document.getElementById('banner-data').style.display = 'block';
                 }
@@ -96,7 +210,7 @@
                 dados.forEach(item => {
                     let classeStatus = '';
                     let textoStatus = '';
-                    
+
                     if (item.quantidade >= item.meta) {
                         classeStatus = 'status-atingida';
                         textoStatus = '🎉 Meta atingida! Sua doação garantirá o próximo mês.';
@@ -111,7 +225,7 @@
                             <div class="icone-grande">${item.icone}</div>
                             <div class="nome-item">${item.nome}</div>
                             <span class="status-meta ${classeStatus}">${textoStatus}</span>
-                            <button class="btn-doar" onclick="registrarDoacao('${item.id_item}', '${item.nome}')">Vou doar este item</button>
+                            <button class="btn-doar" onclick="registrarDoacao('${item.id_item}', '${item.nome}', this)">Vou doar este item</button>
                         </div>
                     `;
                 });
@@ -120,8 +234,9 @@
                 document.getElementById('lista-publica').innerHTML = '<p style="color:red; text-align:center;">Erro ao conectar com o servidor.</p>';
             }
         }
-        
+
         carregarEstoqueEData();
     </script>
 </body>
+
 </html>
