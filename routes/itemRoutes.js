@@ -16,8 +16,9 @@ router.post('/publico/intencao', [
 ], asyncHandler(itemController.registrarIntencao));
 
 // ----------------------------------------------------
-// ROTAS PRIVADAS
+// ROTAS PRIVADAS (Protegidas por Senha)
 // ----------------------------------------------------
+router.get('/admin/verificar', authMiddleware, asyncHandler(itemController.verificarToken)); // NOVA ROTA DE SEGUURANÇA
 router.post('/admin/item', authMiddleware, [
     body('nome').notEmpty().withMessage('O nome é obrigatório.').trim().escape(),
     body('meta').isInt({ gt: 0 }).withMessage('A meta deve ser um número maior que zero.'),

@@ -1,26 +1,117 @@
 // public/js/admin.js
 
-if (!localStorage.getItem('adminToken')) {
-    const tokenInformado = prompt("Segurança Ativada!\nPor favor, forneça a Chave Secreta Administrativa:");
-    if (tokenInformado) {
-        localStorage.setItem('adminToken', tokenInformado);
+const valoresMovimentacao = {};
+
+async function validarTokenComServidor(token) {
+    try {
+        const resposta = await fetch('/api/admin/verificar', {
+            method: 'GET',
+            headers: { 'x-admin-token': token || '' }
+        });
+        return resposta.ok;
+    } catch (e) {
+        return false;
     }
 }
 
+async function solicitarSenhaMestre() {
+    const { value: tokenInformado } = await Swal.fire({
+        title: '🔒 Área Restrita',
+        input: 'password',
+        inputLabel: 'Por favor, forneça a Chave Secreta Administrativa:',
+        inputPlaceholder: 'Digite a senha mestre...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCancelButton: true,
+        cancelButtonText: 'Voltar para o Site',
+        confirmButtonColor: '#00509e',
+        cancelButtonColor: '#7f8c8d'
+    });
+
+    if (!tokenInformado) {
+        window.location.href = '/';
+        return;
+    }
+
+    const valido = await validarTokenComServidor(tokenInformado);
+
+    if (valido) {
+        localStorage.setItem('adminToken', tokenInformado);
+        localStorage.setItem('adminTokenTime', Date.now().toString());
+        
+        const container = document.querySelector('.container');
+        if (container) container.style.display = 'block';
+        
+        Swal.fire({
+            title: 'Autorizado!',
+            text: 'Acesso garantido por 12 horas.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
+        
+        await carregarAdmin();
+    } else {
+        await Swal.fire({
+            title: 'Chave Incorreta!',
+            text: 'A senha informada não coincide com o servidor. Tente novamente.',
+            icon: 'error',
+            confirmButtonColor: '#00509e'
+        });
+        solicitarSenhaMestre(); 
+    }
+}
+
+async function inicializarPainelAdmin() {
+    const container = document.querySelector('.container');
+    if (container) container.style.display = 'none'; 
+
+    const TEMPO_LIMITE_MS = 12 * 60 * 60 * 1000; 
+    const tokenAtual = localStorage.getItem('adminToken');
+    const timestampSalvo = localStorage.getItem('adminTokenTime');
+
+    if (tokenAtual && timestampSalvo) {
+        const tempoPassado = Date.now() - parseInt(timestampSalvo);
+        if (tempoPassado < TEMPO_LIMITE_MS) {
+            const valido = await validarTokenComServidor(tokenAtual);
+            if (valido) {
+                if (container) container.style.display = 'block';
+                await carregarAdmin();
+                return;
+            }
+        }
+    }
+
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTokenTime');
+    solicitarSenhaMestre();
+}
+
 async function requisicaoAdmin(url, opcoes = {}) {
+    const tokenAtual = localStorage.getItem('adminToken');
+    const timestampSalvo = localStorage.getItem('adminTokenTime');
+    const TEMPO_LIMITE_MS = 12 * 60 * 60 * 1000;
+
+    if (!tokenAtual || !timestampSalvo || (Date.now() - parseInt(timestampSalvo) > TEMPO_LIMITE_MS)) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminTokenTime');
+        window.location.href = '/';
+        throw new Error("Sessão expirada.");
+    }
+
     opcoes.headers = {
         ...opcoes.headers,
         'Content-Type': 'application/json',
-        'x-admin-token': localStorage.getItem('adminToken') || ''
+        'x-admin-token': tokenAtual
     };
 
     const resposta = await fetch(url, opcoes);
 
     if (resposta.status === 401) {
-        alert("Credencial Expirada ou Inválida!");
         localStorage.removeItem('adminToken');
-        window.location.reload();
-        throw new Error("Acesso administrativo negado.");
+        localStorage.removeItem('adminTokenTime');
+        window.location.href = '/';
+        throw new Error("Acesso administrativo negado pelo servidor.");
     }
 
     return resposta;
@@ -32,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataHoje = new Date().toISOString().split('T')[0];
         inputData.setAttribute('min', dataHoje);
     }
+    inicializarPainelAdmin();
 });
 
 function mudarAba(abaId) {
@@ -68,7 +160,7 @@ async function salvarDataEntrega() {
                 body: JSON.stringify({ chave: 'data_entrega', valor: data })
             });
             mostrarAviso("Data limite registrada com sucesso!");
-            carregarAdmin();
+            carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
         } catch (err) {
             mostrarAviso("Ocorreu um erro ao salvar a data.", "erro");
         }
@@ -81,7 +173,6 @@ function atualizarDashboard(dados, dataSalva) {
 
     let diasFaltando = null;
     if (dataSalva) {
-        // CORREÇÃO: Removido fuso horário desconstruindo a string manualmente (Ano, Mês, Dia)
         const [ano, mes, dia] = dataSalva.split('-');
         let entrega = new Date(ano, mes - 1, dia);
         let hoje = new Date();
@@ -146,14 +237,21 @@ function atualizarDashboard(dados, dataSalva) {
 
 async function carregarAdmin() {
     try {
-        const res = await fetch('/api/estoque');
+        // CORREÇÃO: Força o navegador a buscar os dados frescos (Bypass no Cache)
+        const res = await fetch('/api/estoque', { cache: 'no-store' });
         const dados = await res.json();
 
-        const resConfig = await fetch('/api/config/data_entrega');
+        const resConfig = await fetch('/api/config/data_entrega', { cache: 'no-store' });
         const configData = await resConfig.json();
         const dataSalvaServidor = configData.valor;
 
+        document.querySelectorAll('input[id^="mov-"]').forEach(input => {
+            const idItem = input.id.replace('mov-', '');
+            valoresMovimentacao[idItem] = input.value;
+        });
+
         const div = document.getElementById('lista-admin');
+        if (!div) return;
         div.innerHTML = '';
 
         dados.forEach(item => {
@@ -173,6 +271,8 @@ async function carregarAdmin() {
                 let textoFalta = faltam === 1 ? 'Falta 1 unidade' : `Faltam ${faltam} unidades`;
                 avisoCobertura = `<div class="cobertura-falta">⚠️ ${textoFalta} para fechar a meta atual.</div>`;
             }
+
+            let valorInputSalvo = valoresMovimentacao[item.id_item] || "1";
 
             div.innerHTML += `
                 <div class="card-item">
@@ -199,7 +299,7 @@ async function carregarAdmin() {
 
                         <div style="display: flex; gap: 10px; align-items: center; width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
                             <button class="btn-saida" onclick="movimentar('${item.id_item}', 'saida')" style="flex: 1; padding: 10px;">-</button>
-                            <input type="number" id="mov-${item.id_item}" value="1" min="1" style="width: 60px; padding: 10px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1.2em; font-weight: bold;">
+                            <input type="number" id="mov-${item.id_item}" value="${valorInputSalvo}" min="1" style="width: 60px; padding: 10px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1.2em; font-weight: bold;">
                             <button class="btn-entrada" onclick="movimentar('${item.id_item}', 'entrada')" style="flex: 1; padding: 10px;">+</button>
                         </div>
                     </div>
@@ -241,7 +341,7 @@ async function adicionarProduto() {
         document.getElementById('novo-icone').value = '';
         mudarAba('estoque');
         mostrarAviso("Item cadastrado com sucesso!");
-        carregarAdmin();
+        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -266,7 +366,7 @@ async function excluirProduto(id) {
 
             if (resposta.ok) {
                 mostrarAviso("Alimento removido com sucesso!");
-                carregarAdmin();
+                carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
             } else {
                 Swal.fire('Erro!', respostaJSON.erro || 'Falha ao apagar.', 'error');
             }
@@ -294,7 +394,7 @@ async function salvarBalanco(id) {
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
         mostrarAviso("Estoque balanceado com sucesso!");
-        carregarAdmin();
+        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -318,7 +418,7 @@ async function salvarMeta(id) {
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
         mostrarAviso("Meta reconfigurada com sucesso!");
-        carregarAdmin();
+        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -340,7 +440,7 @@ async function movimentar(id, operacao) {
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
         mostrarAviso("Movimentação contabilizada com sucesso!");
-        carregarAdmin();
+        carregarAdmin(); // CORREÇÃO VITAL: Recarrega a listagem visual com dados novos, sem piscar a tela.
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -399,5 +499,3 @@ async function zerarIntencoes() {
         Swal.fire('Cancelado', 'Palavra incorreta.', 'info');
     }
 }
-
-carregarAdmin();

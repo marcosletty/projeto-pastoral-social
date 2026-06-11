@@ -1,3 +1,4 @@
+// controllers/itemController.js
 const Item = require('../models/Item.js');
 const Config = require('../models/Config.js');
 const { validationResult } = require('express-validator');
@@ -27,7 +28,7 @@ exports.criarItem = async (req, res) => {
 
 exports.atualizarItem = async (req, res) => {
     verificarErros(req);
-    const { id, quantidade, meta } = req.body;
+    const { id, quantidade, meta } = req.body; // Correção de quantity para quantidade
     const item = await Item.findOneAndUpdate(
         { id_item: id }, 
         { quantidade: Number(quantidade), meta: Number(meta) },
@@ -95,5 +96,9 @@ exports.excluirItem = async (req, res) => {
     const { id } = req.params;
     const itemDeletado = await Item.findOneAndDelete({ id_item: id });
     if (!itemDeletado) { return res.status(404).json({ sucesso: false, erro: "Item indisponível." }); }
-    res.json({ sucesso: true, mensagem: "Registro removido permanentemente." });
+    res.json({ sucesso: true, message: "Registro removido permanentemente." });
+};
+
+exports.verificarToken = async (req, res) => {
+    res.json({ sucesso: true, mensagem: "Chave administrativa validada com sucesso." });
 };

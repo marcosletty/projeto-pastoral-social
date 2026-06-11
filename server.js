@@ -53,6 +53,13 @@ app.use((err, req, res, next) => {
 
 // Ativação da Aplicação
 app.use((req, res) => res.status(404).send('Página não encontrada.'));
-app.listen(porta, () => {
-    console.log(`🚀 Sistema Online Profissional! Acesse: http://localhost:${porta}`);
-});
+
+// Se o ficheiro for executado diretamente (npm start), liga o servidor na porta 3000.
+// Caso contrário (se for importado pelo Jest), apenas exporta a app.
+if (require.main === module) {
+    app.listen(porta, () => {
+        console.log(`🚀 Sistema Online Profissional! Acesse: http://localhost:${porta}`);
+    });
+}
+
+module.exports = app;
