@@ -18,7 +18,7 @@ async function solicitarSenhaMestre() {
     const { value: tokenInformado } = await Swal.fire({
         title: '🔒 Área Restrita',
         input: 'password',
-        inputLabel: 'Por favor, forneça a Chave Secreta Administrativa:',
+        inputLabel: 'Por favor, digite a senha:',
         inputPlaceholder: 'Digite a senha mestre...',
         allowOutsideClick: false,
         allowEscapeKey: false,
