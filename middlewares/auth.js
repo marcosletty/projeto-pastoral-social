@@ -1,15 +1,20 @@
 module.exports = (req, res, next) => {
-    // Intercepta a chave enviada no cabeçalho customizado da requisição
     const tokenEnviado = req.headers['x-admin-token'];
-    
-    // Se não configurar a variável ADMIN_TOKEN no .env, usará uma padrão segura temporária
-    const tokenCorreto = process.env.ADMIN_TOKEN || 'paroquia-segura-2026';
+    const tokenCorreto = process.env.ADMIN_TOKEN; // Sem fallback para senhas hardcoded!
+
+    // Trava de segurança: Se o servidor não foi configurado corretamente
+    if (!tokenCorreto) {
+        console.error("ALERTA CRÍTICO: ADMIN_TOKEN não foi configurado no arquivo .env!");
+        const erroAuth = new Error('Erro interno de configuração do servidor.');
+        erroAuth.status = 500;
+        return next(erroAuth);
+    }
 
     if (!tokenEnviado || tokenEnviado !== tokenCorreto) {
-        const erroAuth = new Error('Operação negada. Chave de autenticação administrativa inválida ou ausente.');
-        erroAuth.status = 401; // Unauthorized
+        const erroAuth = new Error('Operação negada. Chave administrativa inválida.');
+        erroAuth.status = 401;
         return next(erroAuth);
     }
     
-    next(); // Chave válida, prossegue para a rota desejada
+    next();
 };
