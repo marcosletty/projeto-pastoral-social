@@ -1,4 +1,3 @@
-// controllers/itemController.js
 const Item = require('../models/Item.js');
 const Config = require('../models/Config.js');
 const { validationResult } = require('express-validator');
@@ -19,19 +18,37 @@ exports.listarEstoque = async (req, res) => {
 
 exports.criarItem = async (req, res) => {
     verificarErros(req);
-    const { nome, meta, icone } = req.body;
+    const { nome, por_cesta, icone } = req.body;
+    
+    // Busca o número atual de famílias para calcular a meta de largada
+    const configFamilias = await Config.findOne({ chave: 'numero_familias' });
+    const familias = configFamilias ? Number(configFamilias.valor) : 1;
+    const metaCalculada = Number(por_cesta) * familias;
+
     let idAutomacao = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-    const novoItem = new Item({ id_item: idAutomacao, nome, meta: Number(meta), icone: icone || "📦" });
+    
+    const novoItem = new Item({ 
+        id_item: idAutomacao, 
+        nome, 
+        por_cesta: Number(por_cesta),
+        meta: metaCalculada,
+        icone: icone || "📦" 
+    });
     await novoItem.save();
     res.json({ sucesso: true });
 };
 
 exports.atualizarItem = async (req, res) => {
     verificarErros(req);
-    const { id, quantidade, meta } = req.body; // Correção de quantity para quantidade
+    const { id, quantidade, por_cesta } = req.body;
+    
+    const configFamilias = await Config.findOne({ chave: 'numero_familias' });
+    const familias = configFamilias ? Number(configFamilias.valor) : 1;
+    const metaCalculada = Number(por_cesta) * familias;
+
     const item = await Item.findOneAndUpdate(
         { id_item: id }, 
-        { quantidade: Number(quantidade), meta: Number(meta) },
+        { quantidade: Number(quantidade), por_cesta: Number(por_cesta), meta: metaCalculada },
         { returnDocument: 'after' }
     );
     if (!item) {
@@ -78,6 +95,17 @@ exports.salvarConfig = async (req, res) => {
     verificarErros(req);
     const { chave, valor } = req.body;
     await Config.findOneAndUpdate({ chave }, { valor }, { upsert: true });
+    
+    // SE MUDAR O NÚMERO DE FAMÍLIAS: Varre e atualiza a meta de todos os itens atomicamente
+    if (chave === 'numero_familias') {
+        const familias = Number(valor);
+        const itens = await Item.find();
+        for (let item of itens) {
+            item.meta = (item.por_cesta || 1) * familias;
+            await item.save();
+        }
+    }
+    
     res.json({ sucesso: true });
 };
 

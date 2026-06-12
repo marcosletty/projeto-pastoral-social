@@ -16,19 +16,20 @@ router.post('/publico/intencao', [
 ], asyncHandler(itemController.registrarIntencao));
 
 // ----------------------------------------------------
-// ROTAS PRIVADAS (Protegidas por Senha)
+// ROTAS PRIVADAS
 // ----------------------------------------------------
-router.get('/admin/verificar', authMiddleware, asyncHandler(itemController.verificarToken)); // NOVA ROTA DE SEGUURANÇA
+router.get('/admin/verificar', authMiddleware, asyncHandler(itemController.verificarToken));
+
 router.post('/admin/item', authMiddleware, [
     body('nome').notEmpty().withMessage('O nome é obrigatório.').trim().escape(),
-    body('meta').isInt({ gt: 0 }).withMessage('A meta deve ser um número maior que zero.'),
+    body('por_cesta').isInt({ gt: 0 }).withMessage('A quantidade por cesta deve ser um número maior que zero.'),
     body('icone').optional().trim()
 ], asyncHandler(itemController.criarItem));
 
 router.put('/admin/atualizar', authMiddleware, [
     body('id').notEmpty().trim().escape(),
     body('quantidade').isInt({ min: 0 }).withMessage('A quantidade não pode ser negativa.'),
-    body('meta').isInt({ gt: 0 }).withMessage('A meta deve ser maior que zero.')
+    body('por_cesta').isInt({ gt: 0 }).withMessage('A quantidade por cesta deve ser maior que zero.')
 ], asyncHandler(itemController.atualizarItem));
 
 router.post('/admin/movimentar', authMiddleware, [

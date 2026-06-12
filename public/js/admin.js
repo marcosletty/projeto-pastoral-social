@@ -18,7 +18,7 @@ async function solicitarSenhaMestre() {
     const { value: tokenInformado } = await Swal.fire({
         title: '🔒 Área Restrita',
         input: 'password',
-        inputLabel: 'Por favor, digite a senha:',
+        inputLabel: 'Por favor, forneça a Senha Administrativa:',
         inputPlaceholder: 'Digite a senha mestre...',
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -117,13 +117,14 @@ async function requisicaoAdmin(url, opcoes = {}) {
     return resposta;
 }
 
+// CENTRALIZAÇÃO DA INICIALIZAÇÃO: Executa estritamente uma única vez ao montar o DOM
 document.addEventListener('DOMContentLoaded', () => {
     const inputData = document.getElementById('data-entrega');
     if (inputData) {
         const dataHoje = new Date().toISOString().split('T')[0];
         inputData.setAttribute('min', dataHoje);
     }
-    inicializarPainelAdmin();
+    inicializarPainelAdmin(); 
 });
 
 function mudarAba(abaId) {
@@ -160,9 +161,25 @@ async function salvarDataEntrega() {
                 body: JSON.stringify({ chave: 'data_entrega', valor: data })
             });
             mostrarAviso("Data limite registrada com sucesso!");
-            carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
+            await carregarAdmin(); 
         } catch (err) {
             mostrarAviso("Ocorreu um erro ao salvar a data.", "erro");
+        }
+    }
+}
+
+async function salvarNumeroFamilias() {
+    let familias = document.getElementById('numero-familias').value;
+    if (familias && familias > 0) {
+        try {
+            await requisicaoAdmin('/api/config', {
+                method: 'POST',
+                body: JSON.stringify({ chave: 'numero_familias', valor: familias })
+            });
+            mostrarAviso("Famílias salvas. Todas as metas foram recalculadas!");
+            await carregarAdmin(); 
+        } catch (err) {
+            mostrarAviso("Ocorreu um erro ao salvar o número de famílias.", "erro");
         }
     }
 }
@@ -222,7 +239,7 @@ function atualizarDashboard(dados, dataSalva) {
             <div style="margin-bottom: 18px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.95em;">
                     <strong>${item.icone} ${item.nome}</strong>
-                    <span style="color:#7f8c8d;">Estoque: <strong>${item.quantidade}</strong> | Promessas: <strong>${item.intencoes || 0}</strong> | Meta: ${item.meta}</span>
+                    <span style="color:#7f8c8d;">Estoque: <strong>${item.quantidade}</strong> | Promessas: <strong>${item.intencoes || 0}</strong> | Meta: ${item.meta} (Cesta: ${item.por_cesta || 1})</span>
                 </div>
                 <div class="barra-fundo">
                     <div class="barra-estoque" style="width: ${percEstoque}%;"></div>
@@ -237,13 +254,19 @@ function atualizarDashboard(dados, dataSalva) {
 
 async function carregarAdmin() {
     try {
-        // CORREÇÃO: Força o navegador a buscar os dados frescos (Bypass no Cache)
         const res = await fetch('/api/estoque', { cache: 'no-store' });
         const dados = await res.json();
 
         const resConfig = await fetch('/api/config/data_entrega', { cache: 'no-store' });
         const configData = await resConfig.json();
         const dataSalvaServidor = configData.valor;
+
+        const resFamilias = await fetch('/api/config/numero_familias', { cache: 'no-store' });
+        const configFamilias = await resFamilias.json();
+        if (configFamilias.valor) {
+            const inputFamilias = document.getElementById('numero-familias');
+            if (inputFamilias) inputFamilias.value = configFamilias.valor;
+        }
 
         document.querySelectorAll('input[id^="mov-"]').forEach(input => {
             const idItem = input.id.replace('mov-', '');
@@ -307,10 +330,10 @@ async function carregarAdmin() {
                     <div class="bloco-acao-compacto" style="margin-bottom: 0; background: #fff; border: 1px dashed #bdc3c7;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <span class="titulo-acao-pequeno" style="margin-bottom: 0;">🎯Meta Mensal:</span>
-                                <input type="number" id="meta-${item.id_item}" value="${item.meta}" style="width: 70px; padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1em; font-weight: bold;">
+                                <span class="titulo-acao-pequeno" style="margin-bottom: 0;">🎯 Quantidade por Cesta:</span>
+                                <input type="number" id="por-cesta-${item.id_item}" value="${item.por_cesta || 1}" min="1" style="width: 50px; padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1em; font-weight: bold;">
                             </div>
-                            <button class="btn-salvar" onclick="salvarMeta('${item.id_item}')" style="background: #00509e; padding: 8px 15px; height: auto;">Salvar Meta</button>
+                            <button class="btn-salvar" onclick="salvarPorCesta('${item.id_item}')" style="background: #00509e; padding: 8px 15px; height: auto;">Salvar</button>
                         </div>
                     </div>
                 </div>
@@ -326,12 +349,12 @@ async function carregarAdmin() {
 async function adicionarProduto() {
     const nome = document.getElementById('novo-nome').value;
     const icone = document.getElementById('novo-icone').value;
-    const meta = document.getElementById('novo-meta').value;
+    const por_cesta = document.getElementById('novo-por-cesta').value;
     if (!nome) return;
 
     try {
         const resposta = await requisicaoAdmin('/api/admin/item', {
-            method: 'POST', body: JSON.stringify({ nome, icone, meta })
+            method: 'POST', body: JSON.stringify({ nome, icone, por_cesta })
         });
         const respostaJSON = await resposta.json();
 
@@ -339,9 +362,10 @@ async function adicionarProduto() {
 
         document.getElementById('novo-nome').value = '';
         document.getElementById('novo-icone').value = '';
+        document.getElementById('novo-por-cesta').value = '1';
         mudarAba('estoque');
         mostrarAviso("Item cadastrado com sucesso!");
-        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
+        await carregarAdmin();
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -366,7 +390,7 @@ async function excluirProduto(id) {
 
             if (resposta.ok) {
                 mostrarAviso("Alimento removido com sucesso!");
-                carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
+                await carregarAdmin();
             } else {
                 Swal.fire('Erro!', respostaJSON.erro || 'Falha ao apagar.', 'error');
             }
@@ -378,47 +402,47 @@ async function excluirProduto(id) {
 
 async function salvarBalanco(id) {
     const qtd = document.getElementById(`qtd-${id}`).value;
-    const meta = document.getElementById(`meta-${id}`).value;
+    const por_cesta = document.getElementById(`por-cesta-${id}`).value;
 
-    if (qtd.trim() === "" || meta.trim() === "") {
-        mostrarAviso("Quantidade e meta não podem ficar em branco.", "erro");
+    if (qtd.trim() === "" || por_cesta.trim() === "") {
+        mostrarAviso("Quantidade e valor por cesta não podem ficar em branco.", "erro");
         return;
     }
 
     try {
         const resposta = await requisicaoAdmin('/api/admin/atualizar', {
-            method: 'PUT', body: JSON.stringify({ id, quantidade: qtd, meta })
+            method: 'PUT', body: JSON.stringify({ id, quantidade: qtd, por_cesta })
         });
         const respostaJSON = await resposta.json();
 
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
         mostrarAviso("Estoque balanceado com sucesso!");
-        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
+        await carregarAdmin();
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
 }
 
-async function salvarMeta(id) {
+async function salvarPorCesta(id) {
     const qtd = document.getElementById(`qtd-${id}`).value;
-    const meta = document.getElementById(`meta-${id}`).value;
+    const por_cesta = document.getElementById(`por-cesta-${id}`).value;
 
-    if (qtd.trim() === "" || meta.trim() === "") {
-        mostrarAviso("Quantidade e meta não podem ficar em branco.", "erro");
+    if (qtd.trim() === "" || por_cesta.trim() === "") {
+        mostrarAviso("Os campos não podem ficar vazios.", "erro");
         return;
     }
 
     try {
         const resposta = await requisicaoAdmin('/api/admin/atualizar', {
-            method: 'PUT', body: JSON.stringify({ id, quantidade: qtd, meta })
+            method: 'PUT', body: JSON.stringify({ id, quantidade: qtd, por_cesta })
         });
         const respostaJSON = await resposta.json();
 
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
-        mostrarAviso("Meta reconfigurada com sucesso!");
-        carregarAdmin(); // CORREÇÃO: Atualiza apenas a lista
+        mostrarAviso("Quantidade por cesta atualizada!");
+        await carregarAdmin();
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
@@ -440,7 +464,7 @@ async function movimentar(id, operacao) {
         if (!resposta.ok) throw new Error(respostaJSON.erro);
 
         mostrarAviso("Movimentação contabilizada com sucesso!");
-        carregarAdmin(); // CORREÇÃO VITAL: Recarrega a listagem visual com dados novos, sem piscar a tela.
+        await carregarAdmin();
     } catch (err) {
         mostrarAviso(err.message, "erro");
     }
