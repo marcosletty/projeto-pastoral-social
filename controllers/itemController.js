@@ -127,6 +127,24 @@ exports.excluirItem = async (req, res) => {
     res.json({ sucesso: true, message: "Registro removido permanentemente." });
 };
 
+exports.entregarCestas = async (req, res) => {
+    verificarErros(req);
+    const { cestas_entregues } = req.body;
+    const numeroCestas = Number(cestas_entregues);
+
+    const itens = await Item.find();
+    
+    // Varre todo o estoque e aplica a subtração
+    for (let item of itens) {
+        const totalDescontar = (item.por_cesta || 1) * numeroCestas;
+        // Math.max garante que, se o desconto for maior que o estoque, ele zere, mas nunca fique negativo
+        item.quantidade = Math.max(0, item.quantidade - totalDescontar);
+        await item.save();
+    }
+
+    res.json({ sucesso: true, mensagem: 'Estoque atualizado após entrega.' });
+};
+
 exports.verificarToken = async (req, res) => {
-    res.json({ sucesso: true, mensagem: "Chave administrativa validada com sucesso." });
+    res.json({ sucesso: true, mensagem: "Senha validada com sucesso." });
 };

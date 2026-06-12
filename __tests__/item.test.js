@@ -71,4 +71,19 @@ describe('Testes de Integração da API - Pastoral Social', () => {
         expect(resposta.status).toBe(200);
         expect(resposta.body.sucesso).toBe(true);
     });
+
+    it('Deve deduzir o estoque ao registrar entrega de cestas (POST /api/admin/entregar-cestas)', async () => {
+        // Simulamos o Mongoose devolvendo um array com função .save() para um item
+        Item.find.mockResolvedValue([
+            { nome: 'Arroz', quantidade: 10, por_cesta: 2, save: jest.fn().mockResolvedValue(true) }
+        ]);
+
+        const resposta = await request(app)
+            .post('/api/admin/entregar-cestas')
+            .set('x-admin-token', tokenSeguro)
+            .send({ cestas_entregues: 3 });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.sucesso).toBe(true);
+    });
 });

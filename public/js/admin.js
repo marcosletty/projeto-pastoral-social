@@ -38,10 +38,10 @@ async function solicitarSenhaMestre() {
     if (valido) {
         localStorage.setItem('adminToken', tokenInformado);
         localStorage.setItem('adminTokenTime', Date.now().toString());
-        
+
         const container = document.querySelector('.container');
         if (container) container.style.display = 'block';
-        
+
         Swal.fire({
             title: 'Autorizado!',
             text: 'Acesso garantido por 12 horas.',
@@ -49,7 +49,7 @@ async function solicitarSenhaMestre() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         await carregarAdmin();
     } else {
         await Swal.fire({
@@ -58,15 +58,15 @@ async function solicitarSenhaMestre() {
             icon: 'error',
             confirmButtonColor: '#00509e'
         });
-        solicitarSenhaMestre(); 
+        solicitarSenhaMestre();
     }
 }
 
 async function inicializarPainelAdmin() {
     const container = document.querySelector('.container');
-    if (container) container.style.display = 'none'; 
+    if (container) container.style.display = 'none';
 
-    const TEMPO_LIMITE_MS = 12 * 60 * 60 * 1000; 
+    const TEMPO_LIMITE_MS = 12 * 60 * 60 * 1000;
     const tokenAtual = localStorage.getItem('adminToken');
     const timestampSalvo = localStorage.getItem('adminTokenTime');
 
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataHoje = new Date().toISOString().split('T')[0];
         inputData.setAttribute('min', dataHoje);
     }
-    inicializarPainelAdmin(); 
+    inicializarPainelAdmin();
 });
 
 function mudarAba(abaId) {
@@ -161,7 +161,7 @@ async function salvarDataEntrega() {
                 body: JSON.stringify({ chave: 'data_entrega', valor: data })
             });
             mostrarAviso("Data limite registrada com sucesso!");
-            await carregarAdmin(); 
+            await carregarAdmin();
         } catch (err) {
             mostrarAviso("Ocorreu um erro ao salvar a data.", "erro");
         }
@@ -177,7 +177,7 @@ async function salvarNumeroFamilias() {
                 body: JSON.stringify({ chave: 'numero_familias', valor: familias })
             });
             mostrarAviso("Famílias salvas. Todas as metas foram recalculadas!");
-            await carregarAdmin(); 
+            await carregarAdmin();
         } catch (err) {
             mostrarAviso("Ocorreu um erro ao salvar o número de famílias.", "erro");
         }
@@ -467,6 +467,40 @@ async function movimentar(id, operacao) {
         await carregarAdmin();
     } catch (err) {
         mostrarAviso(err.message, "erro");
+    }
+}
+
+async function registrarEntregaCestas() {
+    const { value: cestas } = await Swal.fire({
+        title: 'Registrar Entrega',
+        text: 'Quantas cestas foram montadas e entregues hoje?',
+        input: 'number',
+        inputAttributes: { min: 1, step: 1 },
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#27ae60',
+        cancelButtonColor: '#7f8c8d',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Confirmar Baixa'
+    });
+
+    if (cestas && cestas > 0) {
+        try {
+            const resposta = await requisicaoAdmin('/api/admin/entregar-cestas', {
+                method: 'POST',
+                body: JSON.stringify({ cestas_entregues: cestas })
+            });
+
+            if (resposta.ok) {
+                await Swal.fire('Sucesso!', `O estoque foi atualizado. Alimentos referentes a ${cestas} cestas foram deduzidos.`, 'success');
+                await carregarAdmin(); // Recarrega a listagem visual imediatamente
+            } else {
+                const json = await resposta.json();
+                Swal.fire('Falha', json.erro || 'Não foi possível completar a baixa.', 'error');
+            }
+        } catch (erro) {
+            Swal.fire('Erro', 'Problema de comunicação com o servidor.', 'error');
+        }
     }
 }
 

@@ -23,12 +23,28 @@
 
         <div id="aba-estoque" class="conteudo-aba ativa">
             <div id="lista-admin">Carregando dados com segurança...</div>
-            <div style="margin-top: 40px; padding: 20px; border: 2px dashed #dc3545; border-radius: 8px; background-color: #fff3f3; text-align: center;">
+
+            <div
+                style="margin-top: 40px; padding: 20px; border: 2px dashed #dc3545; border-radius: 8px; background-color: #fff3f3; text-align: center;">
                 <h3 style="color: #dc3545; margin-top: 0;">⚠️ Zona de Risco</h3>
-                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Ações irreversíveis.</p>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Ações globais e irreversíveis no estoque.
+                </p>
+
                 <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
-                    <button onclick="zerarEstoque()" style="background-color: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px;">🔄 Zerar Todo o Estoque</button>
-                    <button onclick="zerarIntencoes()" style="background-color: #f39c12; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px;">🧹 Zerar Apenas Intenções</button>
+                    <button onclick="registrarEntregaCestas()"
+                        style="background-color: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px;">
+                        📦 Baixar Estoque (Entregar Cestas)
+                    </button>
+
+                    <button onclick="zerarEstoque()"
+                        style="background-color: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px;">
+                        🔄 Zerar Todo o Estoque
+                    </button>
+
+                    <button onclick="zerarIntencoes()"
+                        style="background-color: #f39c12; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px;">
+                        🧹 Zerar Apenas Intenções
+                    </button>
                 </div>
             </div>
         </div>
@@ -37,13 +53,17 @@
             <div class="painel-dashboard">
                 <div class="bloco-data">
                     <strong>📅 Data de Entrega das Cestas:</strong>
-                    <input type="date" id="data-entrega" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-                    <button class="btn-salvar" onclick="salvarDataEntrega()" style="padding: 8px 15px; height: auto;">Salvar Data</button>
+                    <input type="date" id="data-entrega"
+                        style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                    <button class="btn-salvar" onclick="salvarDataEntrega()"
+                        style="padding: 8px 15px; height: auto;">Salvar Data</button>
                 </div>
                 <div class="bloco-data" style="margin-top: 15px;">
                     <strong>👥 Número de Famílias Atendidas:</strong>
-                    <input type="number" id="numero-familias" min="1" value="1" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 80px; text-align: center;">
-                    <button class="btn-salvar" onclick="salvarNumeroFamilias()" style="padding: 8px 15px; height: auto; background-color: #27ae60;">Salvar Famílias</button>
+                    <input type="number" id="numero-familias" min="1" value="1"
+                        style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 80px; text-align: center;">
+                    <button class="btn-salvar" onclick="salvarNumeroFamilias()"
+                        style="padding: 8px 15px; height: auto; background-color: #27ae60;">Salvar Famílias</button>
                 </div>
                 <div id="dashboard-conteudo" style="margin-top: 20px;"></div>
             </div>
@@ -66,8 +86,9 @@
                 <button class="btn-grande" onclick="adicionarProduto()">Cadastrar Alimento</button>
             </div>
         </div>
-    </div> 
+    </div>
 
     <script src="/js/admin.js"></script>
 </body>
+
 </html>

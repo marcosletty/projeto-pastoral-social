@@ -20,6 +20,10 @@ router.post('/publico/intencao', [
 // ----------------------------------------------------
 router.get('/admin/verificar', authMiddleware, asyncHandler(itemController.verificarToken));
 
+router.post('/admin/entregar-cestas', authMiddleware, [
+    body('cestas_entregues').isInt({ gt: 0 }).withMessage('O número de cestas deve ser maior que zero.')
+], asyncHandler(itemController.entregarCestas));
+
 router.post('/admin/item', authMiddleware, [
     body('nome').notEmpty().withMessage('O nome é obrigatório.').trim().escape(),
     body('por_cesta').isInt({ gt: 0 }).withMessage('A quantidade por cesta deve ser um número maior que zero.'),
