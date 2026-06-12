@@ -9,6 +9,9 @@ const path = require('path');
 const app = express();
 const porta = process.env.PORT || 3000;
 
+// Permite que o Rate Limiter identifique o IP real do utilizador atrás da Vercel
+app.set('trust proxy', 1);
+
 // 1. Segurança de Cabeçalhos HTTP com Helmet
 app.use(helmet({
     contentSecurityPolicy: false // Permite simplificar o carregamento de scripts locais/inline
